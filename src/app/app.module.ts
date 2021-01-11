@@ -10,6 +10,8 @@ import { MaterialModule } from './material.module';
 import { HomeComponent } from './home/home.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { HttpClientModule } from '@angular/common/http';
+import { AuthService } from './auth/auth.service';
+import { InMemoryAuthService } from './auth/auth.inmemory.service';
 
 @NgModule({
   declarations: [
@@ -25,7 +27,12 @@ import { HttpClientModule } from '@angular/common/http';
     FlexLayoutModule,
     HttpClientModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: AuthService,
+      useClass: InMemoryAuthService
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, pipe, throwError } from 'rxjs';
 import { IUser, User } from '../user/user/user';
 import { Role } from './auth.enum';
 import { transformError } from '../common/common';
@@ -40,8 +40,27 @@ export abstract class AuthService
   readonly currentUser$ = new BehaviorSubject<IUser>(new User());
 
   constructor() {
+
     super();
-   }
+
+    if (this.hasExpiredToken()) {
+       this.logout(true);
+    } else {
+      this.authStatus$.next(this.getAuthStatusFromToken());
+      setTimeout(() => this.resumeCurrentUser$.subscribe(), 0);
+    }
+  }
+
+  private getAndUpdateUserIfAuthenticated = pipe(
+    filter((status: IAuthStatus) => status.isAuthenticated),
+    mergeMap(() => this.getCurrentUser()),
+    map((user: IUser) => this.currentUser$.next(user)),
+    catchError(transformError)
+  );
+
+  protected readonly resumeCurrentUser$ = this.authStatus$.pipe(
+    this.getAndUpdateUserIfAuthenticated
+  );
 
   login(email: string, password: string): Observable<void> {
 
@@ -50,14 +69,10 @@ export abstract class AuthService
       .pipe(
         map((value) => {
           this.setToken(value.accessToken);
-          const token = decode(value.accessToken);
-          return this.transformJwtToken(token);
+          return this.getAuthStatusFromToken();
         }),
         tap((status) => this.authStatus$.next(status)),
-        filter((status: IAuthStatus) => status.isAuthenticated),
-        mergeMap(() => this.getCurrentUser()),
-        map(user => this.currentUser$.next(user)),
-        catchError(transformError)
+        this.getAndUpdateUserIfAuthenticated
       );
 
     loginResponse$.subscribe({
@@ -89,6 +104,22 @@ export abstract class AuthService
 
   protected clearToken(): void {
     this.removeItem('jwt');
+  }
+
+  protected hasExpiredToken(): boolean {
+
+    const jwt = this.getToken();
+
+    if (jwt) {
+      const payload = decode(jwt) as any;
+      return Date.now() >= payload.exp * 1000;
+    }
+
+    return true;
+  }
+
+  protected getAuthStatusFromToken(): IAuthStatus {
+    return this.transformJwtToken(decode(this.getToken()));
   }
 
   protected abstract authProvider(email: string, password: string): Observable<IServerAuthResponse>;

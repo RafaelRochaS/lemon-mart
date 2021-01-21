@@ -27,6 +27,7 @@
     "jwt-decode": "^3.1.2",
     "jwt-encode": "^1.0.1",
     "rxjs": "~6.6.0",
+    "subsink": "^1.0.2",
     "tslib": "^2.0.0",
     "zone.js": "~0.10.2"
   },

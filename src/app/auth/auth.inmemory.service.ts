@@ -12,7 +12,7 @@ export class InMemoryAuthService extends AuthService {
     _id: '5da01751da27cc462d265913',
     email: 'rafaelrochasouza@outlook.com.br',
     name: { first: 'Rafael', last: 'Rocha' },
-    picture: 'https://avatars0.githubusercontent.com/u/68481074?s=400&u=b7b08541cf9c2bbe6c2dfec896c81fe40430b071&v=4',
+    picture: '',
     role: Role.Manager,
     dateOfBirth: new Date(1980, 1, 1),
     userStatus: true,
